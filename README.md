@@ -1,0 +1,17 @@
+flaskapp\
+  .venv\
+  app\
+    templates\
+      base.html
+      index.html
+      login.html
+      register.html
+    __init__.py
+    forms.py
+    routes.py
+    models.py
+  migrations\
+  .flaskenv
+  app.db
+  config.py
+  flaskapp.py

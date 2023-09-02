@@ -1,0 +1,5 @@
+.venv
+.vscode
+app.db
+flask_snippets.txt
+__pycache__
