@@ -3,6 +3,7 @@
 {% block content %}
     <h1>Register</h1>
     <form action="" method="post">
+        <!-- form.hidden_tag() generates a hidden field that includes a token that is used to protect the form against CSRF attacks -->
         {{ form.hidden_tag() }}
         <p>
             {{ form.username.label }}<br>

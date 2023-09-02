@@ -3,6 +3,7 @@
 {% block content %}
     <h1>Sign In</h1>
     <form action="" method="post" novalidate>
+        <!-- form.hidden_tag() generates a hidden field that includes a token that is used to protect the form against CSRF attacks -->
         {{ form.hidden_tag() }}
         <p>
             {{ form.username.label }}<br>

@@ -10,10 +10,10 @@ app: Flask = Flask(__name__)
 app.config.from_object(Config)
 
 login: LoginManager = LoginManager(app)
-login.login_view = "login"
+login.login_view = "login"  # type: ignore
 
 db: SQLAlchemy = SQLAlchemy(app)
 migrate: Migrate = Migrate(app, db)
 
 # Imports at bottom to avoid circular import errors
-from app import routes, models
+from app import routes, models, errors
