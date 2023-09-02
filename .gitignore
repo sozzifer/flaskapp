@@ -3,3 +3,5 @@
 app.db
 flask_snippets.txt
 __pycache__
+.mypy_cache
+mypy.ini
