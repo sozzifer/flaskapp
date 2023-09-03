@@ -1,7 +1,8 @@
-from typing import Dict, List, Optional, Union
 from datetime import datetime as dt
-from flask import render_template, flash, redirect, url_for, request
-from flask_login import current_user, login_user, logout_user, login_required
+from typing import Dict, List, Optional, Union
+
+from flask import flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug import Response
 from werkzeug.urls import url_parse
 
@@ -86,7 +87,7 @@ def register() -> Union[str, Response]:
 
 @app.route("/user/<username>")
 @login_required
-def user(username: str) -> str:
+def user_profile(username: str) -> str:
     """User profile view function."""
     user: User = User.query.filter_by(username=username).first_or_404()
     posts: List[Dict] = [
@@ -97,11 +98,15 @@ def user(username: str) -> str:
         "user.html", user=user, posts=posts, title=f"{user.username}'s Profile"
     )
 
-@app.route('/edit_profile', methods=['GET', 'POST'])
-def edit_profile():
-    form = EditProfileForm()
+
+@app.route("/edit_profile", methods=["GET", "POST"])
+@login_required
+def edit_profile() -> Union[str, Response]:
+    """Edit profile view function"""
+    # TODO Address potential race condition by locking table
+    form = EditProfileForm(current_user.username)  # type: ignore
     if form.validate_on_submit():
-        # If profile form is submitted and passes validation, flash message and redirect to edit_profile page (i.e. refrech current page)
+        # If profile form is submitted and passes validation, flash message and redirect to edit_profile page (i.e. refresh current page)
         current_user.username = form.username.data
         current_user.about_me = form.about_me.data
         db.session.commit()
@@ -111,4 +116,4 @@ def edit_profile():
         # If validate_on_submit() returns False because this is a GET request, populate form from database fields
         form.username.data = current_user.username  # type: ignore
         form.about_me.data = current_user.about_me  # type: ignore
-    return render_template('edit_profile.html', title="Edit Profile", form=form)
+    return render_template("edit_profile.html", title="Edit Profile", form=form)
