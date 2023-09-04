@@ -35,7 +35,7 @@ class User(UserMixin, db.Model):
     posts: RelationshipProperty = db.relationship(
         "Post", backref="author", lazy="dynamic"
     )
-    """The `followed` RelationshipProperty links an instance of `User` to other `User` instances. For two users linked by this relationship, the left side `follower` user follows the right side `followed` user, i.e. the relationship is defined as seen from the left side user. Querying on the `follower` user returns a list of `followed` users.
+    """The `User.followed` RelationshipProperty links an instance of `User` to other `User` instances. For two users linked by this relationship, the left side `follower` user follows the right side `followed` users, i.e. the relationship is defined as seen from the left side user. Querying on the `follower` user returns a list of `followed` users.
     """
     followed: RelationshipProperty = db.relationship(
         # "User" is the class to be used on the right side of the relationship. The left side is the parent `User` class. Since this is a self-referential relationship, the same class is used on both sides.
