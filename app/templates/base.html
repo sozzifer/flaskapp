@@ -19,6 +19,7 @@
             {% else %}
             <!-- The "user" route takes a dynamic "username" argument, which is passed here from the current_user FlaskLogin property -->
             <a href="{{ url_for('user', username=current_user.username) }}">Profile</a>
+            <a href="{{ url_for('explore') }}">Explore</a>
             <a href="{{ url_for('logout') }}">Logout</a>
             {% endif %}
         </div>
