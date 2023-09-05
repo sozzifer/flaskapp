@@ -56,3 +56,7 @@ class EditProfileForm(FlaskForm):
             user: User = User.query.filter_by(username=self.username.data).first()
             if user is not None:
                 raise ValidationError("Username not available.")
+
+
+class EmptyForm(FlaskForm):
+    submit: SubmitField = SubmitField("Submit")

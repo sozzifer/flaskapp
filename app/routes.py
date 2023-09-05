@@ -7,7 +7,7 @@ from werkzeug import Response
 from werkzeug.urls import url_parse
 
 from app import app, db
-from app.forms import EditProfileForm, LoginForm, RegistrationForm
+from app.forms import EditProfileForm, LoginForm, RegistrationForm, EmptyForm
 from app.models import User
 
 
@@ -22,10 +22,10 @@ def before_request():
 # @app.route decorator defines the URLs to which the associated view function refers (i.e. www.sozzifer.org/ and www.sozzifer.org/index)
 @app.route("/")
 @app.route("/index")
-# @login_required decorator indicates that user must be logged in to view route
+# @login_required decorator indicates that user must be logged in to view this page
 @login_required
 def index() -> str:
-    """Index view function"""
+    """Index page (homepage) view function"""
     posts: List[Dict] = [
         {"author": {"username": "John"}, "body": "Beautiful day in Portland!"},
         {"author": {"username": "Susan"}, "body": "The Avengers movie was so cool!"},
@@ -38,7 +38,7 @@ def index() -> str:
 
 @app.route("/login", methods=["GET", "POST"])
 def login() -> Union[str, Response]:
-    """Login view function"""
+    """Login page view function"""
     if current_user.is_authenticated:  # type: ignore
         # If user is already logged in, redirect to homepage
         return redirect(url_for("index"))
@@ -52,7 +52,7 @@ def login() -> Union[str, Response]:
             return redirect(url_for("login"))
         # Set current_user
         login_user(user, remember=form.remember_me.data)
-        # If user attempts to access a page for which @login_required, get the value of `next` and generate the redirect URL, otherwise redirect to homepage
+        # If user attempts to access a page for which @login_required, get the value of `next` from the HTTP request and generate the redirect URL, otherwise redirect to homepage
         next_page: Optional[str] = request.args.get("next")
         if not next_page or url_parse(next_page).netloc != "":
             next_page = url_for("index")
@@ -69,7 +69,7 @@ def logout() -> Response:
 
 @app.route("/register", methods=["GET", "POST"])
 def register() -> Union[str, Response]:
-    """Register view function"""
+    """Registration page view function"""
     if current_user.is_authenticated:  # type: ignore
         # If user is already logged in, redirect to homepage
         return redirect(url_for("index"))
@@ -87,22 +87,27 @@ def register() -> Union[str, Response]:
 
 @app.route("/user/<username>")
 @login_required
-def user_profile(username: str) -> str:
+def user(username: str) -> str:
     """User profile view function."""
     user: User = User.query.filter_by(username=username).first_or_404()
     posts: List[Dict] = [
         {"author": user, "body": "Test post #1"},
         {"author": user, "body": "Test post #2"},
     ]
+    form = EmptyForm()
     return render_template(
-        "user.html", user=user, posts=posts, title=f"{user.username}'s Profile"
+        "user.html",
+        user=user,
+        posts=posts,
+        form=form,
+        title=f"{user.username}'s Profile",
     )
 
 
 @app.route("/edit_profile", methods=["GET", "POST"])
 @login_required
 def edit_profile() -> Union[str, Response]:
-    """Edit profile view function"""
+    """Edit profile page view function"""
     # TODO Address potential race condition by locking table
     form = EditProfileForm(current_user.username)  # type: ignore
     if form.validate_on_submit():
@@ -117,3 +122,45 @@ def edit_profile() -> Union[str, Response]:
         form.username.data = current_user.username  # type: ignore
         form.about_me.data = current_user.about_me  # type: ignore
     return render_template("edit_profile.html", title="Edit Profile", form=form)
+
+
+@app.route("/follow/<username>", methods=["POST"])
+@login_required
+def follow(username: str) -> Response:
+    """Follow user view function"""
+    form = EmptyForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=username).first()
+        if user is None:
+            flash(f"User {username} not found")
+            return redirect(url_for("index"))
+        if user == current_user:
+            flash("You cannot follow yourself")
+            return redirect(url_for("user", username=username))
+        current_user.follow(user)
+        db.session.commit()
+        flash(f"You followed {username}")
+        return redirect(url_for("user", username=username))
+    else:
+        return redirect(url_for("index"))
+
+
+@app.route("/unfollow/<username>", methods=["POST"])
+def unfollow(username):
+    """Unfollow user view function"""
+    form = EmptyForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=username).first()
+        if user is None:
+            flash(f"User {username} not found")
+            return redirect(url_for("index"))
+        if user == current_user:
+            flash(f"You cannot unfollow yourself")
+            return redirect(url_for("user", username=username))
+        current_user.unfollow(user)
+        db.session.commit()
+        flash(f"You unfollowed {username}")
+        return redirect(url_for("user", username=username))
+    else:
+        # validate_on_submit will return False if the CSRF token is missing or invalid
+        return redirect(url_for("index"))
