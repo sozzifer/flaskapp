@@ -17,6 +17,8 @@ class Config(object):
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
     ADMINS = ["sozzifer@gmail.com"]
+    POSTS_PER_PAGE = 20
+
 
 """To configure a Gmail email server, set the following environmental variables:
 export MAIL_SERVER=smtp.googlemail.com
