@@ -1,12 +1,14 @@
 from datetime import datetime as dt
 from hashlib import md5
+import jwt
+from time import time
 from typing import Any, Callable, List, Optional
 
 from flask_login import UserMixin
 from sqlalchemy.orm import RelationshipProperty
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app import db, login
+from app import app, db, login
 
 # Followers association table
 followers = db.Table(
@@ -66,6 +68,23 @@ class User(UserMixin, db.Model):  # type: ignore
     def check_password(self, password: str) -> bool:
         """Compare password_hash to user-provided password and return boolean."""
         return check_password_hash(self.password_hash, password)
+
+    def get_reset_password_token(self, expires_in: int = 600) -> str:
+        return jwt.encode(
+            {"reset_password": self.id, "exp": time() + expires_in},
+            app.config["SECRET_KEY"],
+            algorithm="HS256",
+        )
+
+    @staticmethod
+    def verify_reset_password_token(token: str) -> "User":
+        try:
+            id = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])[
+                "reset_password"
+            ]
+        except:
+            return
+        return User.query.get(id)
 
     def avatar(self, size: int) -> str:
         """Generate user avatar from MD5 hash of user email"""
