@@ -1,10 +1,18 @@
+from threading import Thread
 from typing import List
 
-from flask import render_template
+from flask import Flask, render_template
 from flask_mail import Message
 
 from app import app, mail
 from app.models import User
+
+
+def send_async_email(app: Flask, msg: Message):
+    """Send asynchronous email"""
+    # mail.send() needs access to the mail server config details, so the app_context make the application instance available via the `with` statement
+    with app.app_context():
+        mail.send(msg)
 
 
 def send_email(
@@ -14,7 +22,7 @@ def send_email(
     msg = Message(subject=subject, sender=sender, recipients=recipients)
     msg.body = text_body
     msg.html = html_body
-    mail.send(msg)
+    Thread(target=send_async_email, args=(app, msg)).start()
 
 
 def send_password_reset_email(user: User) -> None:

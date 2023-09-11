@@ -1,4 +1,4 @@
-from datetime import datetime as dt
+from datetime import datetime
 from hashlib import md5
 import jwt
 from time import time
@@ -33,7 +33,7 @@ class User(UserMixin, db.Model):  # type: ignore
     email: str = db.Column(db.String(120), index=True, unique=True)
     password_hash: str = db.Column(db.String(128))
     about_me: str = db.Column(db.String(140))
-    last_seen: dt = db.Column(db.DateTime, default=dt.utcnow)
+    last_seen: datetime = db.Column(db.DateTime, default=datetime.utcnow)
     posts: RelationshipProperty = db.relationship(
         "Post", backref="author", lazy="dynamic"
     )
@@ -70,6 +70,7 @@ class User(UserMixin, db.Model):  # type: ignore
         return check_password_hash(self.password_hash, password)
 
     def get_reset_password_token(self, expires_in: int = 600) -> str:
+        """Generate a JSON Web Token for a user to reset their password"""
         return jwt.encode(
             {"reset_password": self.id, "exp": time() + expires_in},
             app.config["SECRET_KEY"],
@@ -77,13 +78,14 @@ class User(UserMixin, db.Model):  # type: ignore
         )
 
     @staticmethod
-    def verify_reset_password_token(token: str) -> "User":
+    def verify_reset_password_token(token: str) -> Optional["User"]:
+        """Decode a JSON Web Token and if valid, return the User id"""
         try:
             id = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])[
                 "reset_password"
             ]
         except:
-            return
+            return None
         return User.query.get(id)
 
     def avatar(self, size: int) -> str:
@@ -130,9 +132,7 @@ class Post(db.Model):  # type: ignore
 
     id: int = db.Column(db.Integer, primary_key=True)
     body: str = db.Column(db.String(140))
-    timestamp: Callable[[Any], Any] = db.Column(
-        db.DateTime, index=True, default=dt.utcnow  # type: ignore
-    )
+    timestamp: datetime = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id: int = db.Column(db.Integer, db.ForeignKey("user.id"))
 
     def __repr__(self):

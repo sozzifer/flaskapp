@@ -1,40 +1,46 @@
 <!doctype html>
 <!-- Base HTML template with navigation bar -->
 <html>
-    <head>
-        {% if title %}
-        <title>{{ title }}</title>
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    {% if title %}
+    <title>{{ title }}</title>
+    {% else %}
+    <title>Homepage</title>
+    {% endif %}
+    <link href="{{ url_for('static', filename='css/main.css')}}" rel="stylesheet">
+</head>
+
+<body>
+    <div>
+        Navigation:
+        <a href="{{ url_for('index') }}">Home</a>
+        <!-- Check if user is logged in and display correct navigation options -->
+        {% if current_user.is_anonymous %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
         {% else %}
-        <title>Homepage</title>
+        <!-- The "user" route takes a dynamic "username" argument, which is passed here from the current_user FlaskLogin property -->
+        <a href="{{ url_for('user', username=current_user.username) }}">Profile</a>
+        <a href="{{ url_for('explore') }}">Explore</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
         {% endif %}
-    </head>
-    <body>
-        <div>
-            Navigation:
-            <a href="{{ url_for('index') }}">Home</a>
-            <!-- Check if user is logged in and display correct navigation options -->
-            {% if current_user.is_anonymous %}
-            <a href="{{ url_for('login') }}">Login</a>
-            <a href="{{ url_for('register') }}">Register</a>
-            {% else %}
-            <!-- The "user" route takes a dynamic "username" argument, which is passed here from the current_user FlaskLogin property -->
-            <a href="{{ url_for('user', username=current_user.username) }}">Profile</a>
-            <a href="{{ url_for('explore') }}">Explore</a>
-            <a href="{{ url_for('logout') }}">Logout</a>
-            {% endif %}
-        </div>
-        <hr>
-        {% with messages = get_flashed_messages() %}
+    </div>
+    <hr>
+    {% with messages = get_flashed_messages() %}
     {% if messages %}
-        <ul>
-            {% for message in messages %}
-            <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+    <ul>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
     {% endwith %}
     {% block content %}
     <!-- Content from other templates will be displayed in the `content` block -->
     {% endblock %}
-    </body>
+</body>
+
 </html>
